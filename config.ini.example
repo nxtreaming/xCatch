@@ -1,0 +1,18 @@
+[xcatch]
+# (required) uTools API Key
+api_key = your_api_key_here
+
+# (optional) Twitter auth_token, required by some endpoints (e.g. HomeTimeline)
+# auth_token =
+
+# (optional) API base URL, default https://fapi.uk
+# base_url = https://fapi.uk
+
+# (optional) HTTP timeout in seconds, default 30
+# timeout_sec = 30
+
+# (optional) Max retries on rate limit / transient errors, default 3
+# max_retries = 3
+
+# (optional) QPS limit, default 5
+# rate_limit = 5
