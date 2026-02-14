@@ -2,6 +2,7 @@ package config
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -86,8 +87,9 @@ func LoadFromFile(path string) (*Config, error) {
 }
 
 // Load loads configuration with the following priority (highest to lowest):
-//  1. config.ini file (if it exists at the given path)
-//  2. Environment variables (as fallback for any missing fields)
+//  1. Environment variables (override file values when set)
+//  2. config.ini file (if it exists at the given path)
+//  3. Built-in defaults
 //
 // If path is empty, it defaults to "config.ini" in the current directory.
 func Load(path string) *Config {
@@ -98,7 +100,7 @@ func Load(path string) *Config {
 	// Try loading from file first
 	cfg, err := LoadFromFile(path)
 	if err != nil {
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, os.ErrNotExist) {
 			log.Printf("config warning: failed to parse %s, falling back to defaults/env: %v", path, err)
 		}
 		// File not found or parse error, start from defaults

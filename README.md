@@ -45,7 +45,7 @@
 
 ### 前置条件
 
-1. 安装 Go 1.21+
+1. 安装 Go 1.23+
 2. 获取 uTools API Key:
    - 方式一: 在 https://twitter.good6.top 登录 Twitter，通过 [用户中心](https://twitter.utools.me/userCenter) 查看 apiKey
    - 方式二: 在商城直接购买 https://www.idatariver.com/zh-cn/project/twitterplankey-32e6
@@ -55,7 +55,8 @@
 ```bash
 cd xCatch
 go mod tidy
-go build -o xcatch ./cmd/
+go build -o xcatch.exe ./cmd/
+# macOS/Linux 可使用: go build -o xcatch ./cmd/
 ```
 
 ### 配置
@@ -66,6 +67,7 @@ go build -o xcatch ./cmd/
 
 ```bash
 cp config.ini.example config.ini
+# PowerShell: Copy-Item config.ini.example config.ini
 ```
 
 ```ini
@@ -95,38 +97,52 @@ api_key = your_api_key_here
 
 配置优先级：环境变量 > config.ini > 默认值
 
+如果 `config.ini` 存在但格式错误，程序会打印 warning 并回退到默认值 + 环境变量。
+
+### auth_token 说明
+
+以下接口需要提供 `auth_token`，否则会直接返回错误：
+
+- `GetHomeTimeline`
+- `GetMentionsTimeline`
+- `GetAccountAnalytics`
+
+可通过 `config.ini` 的 `auth_token` 字段或环境变量 `XCATCH_AUTH_TOKEN` 设置。
+
 ### 使用示例
 
 ```bash
 # 设置 API Key
-export XCATCH_API_KEY="your_api_key_here"
+export XCATCH_API_KEY="your_api_key_here"   # PowerShell: $env:XCATCH_API_KEY="your_api_key_here"
 
 # 查询用户信息
-./xcatch user elonmusk
+./xcatch.exe user elonmusk
 
 # 获取用户推文（默认1页）
-./xcatch tweets 44196397
+./xcatch.exe tweets 44196397
 
 # 获取用户推文（最多3页）
-./xcatch tweets 44196397 3
+./xcatch.exe tweets 44196397 3
+
+# 注意：max_pages 必须是正整数
 
 # 查看推文详情及回复
-./xcatch tweet 1234567890
+./xcatch.exe tweet 1234567890
 
 # 搜索推文
-./xcatch search "bitcoin" Latest
+./xcatch.exe search "bitcoin" Latest
 
 # 获取粉丝列表
-./xcatch followers 44196397
+./xcatch.exe followers 44196397
 
 # 获取关注列表
-./xcatch followings 44196397
+./xcatch.exe followings 44196397
 
 # 获取用户点赞
-./xcatch likes 44196397
+./xcatch.exe likes 44196397
 
 # 获取热门趋势
-./xcatch trending
+./xcatch.exe trending
 ```
 
 ### 作为 SDK 使用
@@ -185,6 +201,168 @@ func main() {
 }
 ```
 
+## 接口能力矩阵（快速索引）
+
+### CLI 命令与 SDK 方法映射
+
+| CLI 命令 | SDK 方法 | 说明 |
+|---|---|---|
+| `user <screen_name>` | `GetUserByScreenNameV2` | 用户资料查询 |
+| `tweets <user_id> [max_pages]` | `GetUserTweets` / `NewPageIterator` | 用户推文分页 |
+| `tweet <tweet_id>` | `GetTweetDetail` | 推文详情与回复线程 |
+| `search <query> [type]` | `Search` | 高级搜索 |
+| `followers <user_id>` | `GetFollowers` | 粉丝列表 |
+| `followings <user_id>` | `GetFollowings` | 关注列表 |
+| `likes <user_id>` | `GetUserLikes` | 点赞列表 |
+| `trending` | `GetTrending` | 热门趋势 |
+
+### 常用接口能力
+
+| 能力 | 代表方法 | 需要 `auth_token` | 支持 `cursor` |
+|---|---|---|---|
+| 用户资料 | `GetUserByScreenNameV2` / `GetUserByIDV2` | 否 | 否 |
+| 用户推文 | `GetUserTweets` | 否 | 是 |
+| 推文详情 | `GetTweetDetail` | 否 | 是 |
+| 搜索 | `Search` | 否 | 是 |
+| 粉丝/关注 | `GetFollowers` / `GetFollowings` | 否 | 是 |
+| 点赞列表 | `GetUserLikes` | 否 | 是 |
+| Home 时间线 | `GetHomeTimeline` | 是 | 是 |
+| Mentions 时间线 | `GetMentionsTimeline` | 是 | 是 |
+| 账号分析 | `GetAccountAnalytics` | 是 | 否 |
+
+## Endpoint 路径对照表（方法 -> Path）
+
+> 说明：以下路径来自当前 SDK 实现，便于与你的 uTools 文档逐项核对。
+
+### User
+
+| SDK 方法 | Path |
+|---|---|
+| `GetUserByScreenName` | `/api/base/apitools/screenname` |
+| `GetUserByID` | `/api/base/apitools/id` |
+| `GetUsersByIDs` | `/api/base/apitools/ids` |
+| `GetUsernameChanges` | `/api/base/apitools/usernameChanges` |
+| `LookupUser` | `/api/base/apitools/lookup` |
+| `GetUserByScreenNameV2` | `/api/base/apitools/userByScreenNameV2` |
+| `GetUserByIDV2` | `/api/base/apitools/uerByIdRestIdV2` |
+| `GetUsersByIDsV2` | `/api/base/apitools/usersByIdRestIds` |
+| `GetAccountAnalytics` | `/api/base/apitools/accountAnalytics` |
+
+### Tweet
+
+| SDK 方法 | Path |
+|---|---|
+| `GetUserTweets` | `/api/base/apitools/userTweetsV2` |
+| `GetUserTimeline` | `/api/base/apitools/userTimeline` |
+| `GetTweetDetail` | `/api/base/apitools/tweetTimeline` |
+| `GetTweetSimple` | `/api/base/apitools/tweetSimple` |
+| `GetTweetsByIDs` | `/api/base/apitools/tweetResultsByRestIds` |
+| `GetUserReplies` | `/api/base/apitools/userTweetReply` |
+| `GetUserLikes` | `/api/base/apitools/userLikeV2` |
+| `GetUserHighlights` | `/api/base/apitools/highlightsV2` |
+| `GetUserArticlesTweets` | `/api/base/apitools/userArticlesTweets` |
+| `GetHomeTimeline` | `/api/base/apitools/homeTimeline` |
+| `GetMentionsTimeline` | `/api/base/apitools/mentionsTimeline` |
+| `GetRetweeters` | `/api/base/apitools/retweetersV2` |
+| `GetFavoriters` | `/api/base/apitools/favoritersV2` |
+| `GetQuotes` | `/api/base/apitools/quotesV2` |
+
+### Search
+
+| SDK 方法 | Path |
+|---|---|
+| `Search` | `/api/base/apitools/search` |
+| `SearchBox` | `/api/base/apitools/searchBox` |
+| `GetTrends` | `/api/base/apitools/trends` |
+| `GetTrending` | `/api/base/apitools/trending` |
+| `GetNews` | `/api/base/apitools/news` |
+| `GetExplorePage` | `/api/base/apitools/explore` |
+| `GetSports` | `/api/base/apitools/sports` |
+| `GetEntertainment` | `/api/base/apitools/entertainment` |
+
+### Social / List / Communities
+
+| SDK 方法 | Path |
+|---|---|
+| `GetFollowers` | `/api/base/apitools/followersListV2` |
+| `GetFollowings` | `/api/base/apitools/followingsListV2` |
+| `GetFollowerIDs` | `/api/base/apitools/followersIds` |
+| `GetFollowingIDs` | `/api/base/apitools/followingsIds` |
+| `GetRelationship` | `/api/base/apitools/getFriendshipsShow` |
+| `GetFollowersYouKnow` | `/api/base/apitools/followersYouKnowV2` |
+| `GetBlueVerifiedFollowers` | `/api/base/apitools/blueVerifiedFollowersV2` |
+| `GetListByUser` | `/api/base/apitools/getListByUserIdOrScreenName` |
+| `GetListMembers` | `/api/base/apitools/listMembersByListIdV2` |
+| `GetListTimeline` | `/api/base/apitools/listLatestTweetsTimeline` |
+| `GetCommunitiesByScreenName` | `/api/base/apitools/getCommunitiesByScreenName` |
+| `GetCommunityInfo` | `/api/base/apitools/communitiesFetchOneQuery` |
+| `GetCommunityTweets` | `/api/base/apitools/communitiesTweetsTimelineV2` |
+| `GetCommunityMembers` | `/api/base/apitools/communitiesMemberV2` |
+
+### Client Utilities
+
+| SDK 方法 | Path |
+|---|---|
+| `TokenSync` | `/api/base/apitools/tokenSync` |
+
+## 接口版本与兼容建议（Legacy vs V2）
+
+为减少上游接口变更带来的影响，建议优先使用 V2 命名接口。
+
+### 优先级建议
+
+1. 优先使用带 `V2` 的方法（如 `GetUserByScreenNameV2`、`GetUserTweets`）。
+2. Legacy 方法仅在 V2 不满足需求时使用。
+3. 新增功能默认接入 V2 路径，并在 PR 中记录对应 path。
+
+### 常见对应关系
+
+| 场景 | 推荐方法（优先） | 兼容方法（次选） |
+|---|---|---|
+| 用户查询（用户名） | `GetUserByScreenNameV2` | `GetUserByScreenName` |
+| 用户查询（ID） | `GetUserByIDV2` | `GetUserByID` |
+| 批量用户查询 | `GetUsersByIDsV2` | `GetUsersByIDs` |
+| 用户推文时间线 | `GetUserTweets` | `GetUserTimeline` |
+
+### 维护建议
+
+- 当文档更新接口路径时，优先同步本 README 的“Endpoint 路径对照表”。
+- 变更路径后，建议至少验证：`user`、`tweets`、`search`、`followers` 四类命令。
+- 如果出现 `403` / `code=88` 高频错误，先排除账号与频控问题，再判断是否为接口变更。
+
+### 版本迁移 Checklist（建议用于每次接口升级）
+
+- [ ] 对照 uTools 文档确认 endpoint path 与参数名
+- [ ] 更新 SDK 方法中的 path 常量
+- [ ] 更新 README 的“Endpoint 路径对照表”
+- [ ] 本地回归验证：`user` / `tweets` / `search` / `followers`
+- [ ] 核查鉴权接口：`GetHomeTimeline` / `GetMentionsTimeline` / `GetAccountAnalytics`
+- [ ] 运行测试：`go test ./...`
+
+### PR 描述模板（接口路径/版本变更）
+
+```md
+## Why
+- [背景] 本次同步 uTools 文档中的接口变更
+
+## What changed
+- [ ] 更新 endpoint path：
+  - `MethodA`: old -> new
+  - `MethodB`: old -> new
+- [ ] 更新 README 对照表与 FAQ
+
+## Verification
+- [ ] go test ./...
+- [ ] ./xcatch.exe user elonmusk
+- [ ] ./xcatch.exe tweets <user_id> 1
+- [ ] ./xcatch.exe search "bitcoin" Latest
+- [ ] ./xcatch.exe followers <user_id>
+
+## Risk
+- [ ] 涉及鉴权接口（auth_token）
+- [ ] 涉及分页 cursor 逻辑
+```
+
 ## 项目结构
 
 ```
@@ -229,6 +407,86 @@ xCatch/
 | Unauthorized (401) | auth_token 缺失/无效 | 直接返回错误 |
 
 最大重试次数通过 `XCATCH_MAX_RETRIES` 配置。
+
+## FAQ
+
+### 0) 最小排障流程（建议先按这个顺序检查）
+
+1. 确认可编译：`go build -o xcatch.exe ./cmd/`
+2. 确认 API Key 已生效（`config.ini` 或 `XCATCH_API_KEY`）
+3. 先调用不依赖 `auth_token` 的接口（如 `user` / `search`）
+4. 若报频率错误，降低并发并等待重试
+5. 若仅鉴权接口失败，再检查 `auth_token`
+
+### 0.1) 常用自检命令
+
+```bash
+# 1) 编译检查
+go build -o xcatch.exe ./cmd/
+
+# 2) 基础连通性（不依赖 auth_token）
+./xcatch.exe user elonmusk
+
+# 3) 搜索接口
+./xcatch.exe search "bitcoin" Latest
+
+# 4) 分页接口（max_pages 必须为正整数）
+./xcatch.exe tweets 44196397 1
+```
+
+### 1) 报错 `config: XCATCH_API_KEY is required`
+
+说明未读取到 API Key。请检查：
+
+- `config.ini` 中是否已填写 `[xcatch] api_key`
+- 是否通过环境变量设置了 `XCATCH_API_KEY`
+- 当前执行目录下是否存在 `config.ini`
+
+### 2) 报错 `utools: auth_token is required for this endpoint`
+
+这是预期行为。以下接口要求提供 `auth_token`：
+
+- Home Timeline
+- Mentions Timeline
+- Account Analytics
+
+可在 `config.ini` 中设置 `auth_token`，或使用环境变量 `XCATCH_AUTH_TOKEN`。
+
+### 3) 遇到 `Rate limit exceeded` / `code=88` 怎么办？
+
+SDK 会自动进行指数退避重试（`1s -> 2s -> 4s ...`，上限 30s）。
+
+建议：
+
+- 降低并发请求数
+- 适当降低 `XCATCH_RATE_LIMIT`
+- 观察响应头 `x-rate-limit-reset`（接近阈值时可调用 `tokenSync`）
+
+### 4) 遇到 `403 Forbidden` 怎么办？
+
+根据 uTools FAQ，这通常是机器人账号临时受限或权限不足。SDK 会自动重试。
+
+如果持续出现：
+
+- 稍后重试
+- 更换节点（`base_url`）
+- 检查账号状态与接口权限
+
+### 5) 分页 `cursor` 怎么使用？
+
+你可以直接用 `NewPageIterator`：
+
+- 首次请求不传 `cursor`
+- 后续请求自动使用上次返回的 `NextCursor`
+- `HasMore()` 为 `false` 时停止
+
+### 6) `tweets` 命令里的 `max_pages` 有什么限制？
+
+`max_pages` 必须是正整数，否则 CLI 会直接报错并退出。
+
+### 7) `config.ini` 写错格式会怎样？
+
+程序会打印 warning，并回退到“默认值 + 环境变量覆盖”的加载策略。
 
 ## 技术支持
 
