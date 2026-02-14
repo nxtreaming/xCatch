@@ -100,10 +100,12 @@ func (c *Client) GetUsersByIDsV2(ctx context.Context, userIDs []string) (json.Ra
 // GetAccountAnalytics retrieves account analytics data.
 // Requires auth_token to be set in the client config.
 func (c *Client) GetAccountAnalytics(ctx context.Context) (json.RawMessage, error) {
-	params := map[string]string{}
-	if c.authToken != "" {
-		params["auth_token"] = c.authToken
+	if c.authToken == "" {
+		return nil, ErrAuthTokenRequired
 	}
+
+	params := map[string]string{}
+	params["auth_token"] = c.authToken
 	var result json.RawMessage
 	err := c.Get(ctx, "/api/base/apitools/accountAnalytics", params, &result)
 	return result, err

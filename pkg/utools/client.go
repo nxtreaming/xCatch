@@ -3,10 +3,12 @@ package utools
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -60,11 +62,7 @@ func (c *Client) Post(ctx context.Context, path string, params map[string]string
 
 // GetRaw performs a GET request and returns the raw response body bytes.
 func (c *Client) GetRaw(ctx context.Context, path string, params map[string]string) ([]byte, error) {
-	var raw json.RawMessage
-	if err := c.doWithRetry(ctx, http.MethodGet, path, params, &raw); err != nil {
-		return nil, err
-	}
-	return []byte(raw), nil
+	return c.doRawWithRetry(ctx, http.MethodGet, path, params)
 }
 
 func (c *Client) doWithRetry(ctx context.Context, method, path string, params map[string]string, result interface{}) error {
@@ -93,19 +91,158 @@ func (c *Client) doWithRetry(ctx context.Context, method, path string, params ma
 			return nil
 		}
 
-		// Check if retryable
-		if apiErr, ok := lastErr.(*APIError); ok {
-			if apiErr.IsRetryable() {
-				continue
-			}
-			// Non-retryable API error, return immediately
+		if !isRetryableError(lastErr) {
 			return lastErr
 		}
-
-		// Network or other transient error, retry
-		continue
 	}
 	return lastErr
+}
+
+func (c *Client) doRawWithRetry(ctx context.Context, method, path string, params map[string]string) ([]byte, error) {
+	var (
+		lastErr error
+		body    []byte
+	)
+
+	for attempt := 0; attempt <= c.maxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := time.Duration(math.Pow(2, float64(attempt-1))) * time.Second
+			if backoff > 30*time.Second {
+				backoff = 30 * time.Second
+			}
+			log.Printf("[utools] retry %d/%d for %s %s (backoff %v)", attempt, c.maxRetries, method, path, backoff)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+
+		if err := c.limiter.Wait(ctx); err != nil {
+			return nil, fmt.Errorf("utools: rate limiter: %w", err)
+		}
+
+		body, lastErr = c.doRaw(ctx, method, path, params)
+		if lastErr == nil {
+			return body, nil
+		}
+
+		if !isRetryableError(lastErr) {
+			return nil, lastErr
+		}
+	}
+
+	return nil, lastErr
+}
+
+func isRetryableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.IsRetryable()
+	}
+
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return netErr.Timeout()
+	}
+
+	return false
+}
+
+func (c *Client) doRaw(ctx context.Context, method, path string, params map[string]string) ([]byte, error) {
+	reqURL := c.baseURL + path
+
+	merged := make(map[string]string, len(params)+1)
+	for k, v := range params {
+		merged[k] = v
+	}
+	merged["apiKey"] = c.apiKey
+
+	var req *http.Request
+	var err error
+
+	switch method {
+	case http.MethodGet:
+		u, parseErr := url.Parse(reqURL)
+		if parseErr != nil {
+			return nil, fmt.Errorf("utools: parse url: %w", parseErr)
+		}
+		q := u.Query()
+		for k, v := range merged {
+			q.Set(k, v)
+		}
+		u.RawQuery = q.Encode()
+		req, err = http.NewRequestWithContext(ctx, method, u.String(), nil)
+
+	case http.MethodPost:
+		form := url.Values{}
+		for k, v := range merged {
+			form.Set(k, v)
+		}
+		req, err = http.NewRequestWithContext(ctx, method, reqURL, strings.NewReader(form.Encode()))
+		if err == nil {
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
+
+	default:
+		return nil, fmt.Errorf("utools: unsupported method: %s", method)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("utools: create request: %w", err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("utools: http request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("utools: read body: %w", err)
+	}
+
+	if resetStr := resp.Header.Get("x-rate-limit-reset"); resetStr != "" {
+		if resetVal, parseErr := strconv.Atoi(resetStr); parseErr == nil && resetVal < 9 {
+			log.Printf("[utools] x-rate-limit-reset=%d, consider calling tokenSync", resetVal)
+		}
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		apiErr := &APIError{
+			StatusCode: resp.StatusCode,
+			RawBody:    string(body),
+		}
+		var errResp struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+			Msg     string `json:"msg"`
+		}
+		if json.Unmarshal(body, &errResp) == nil {
+			apiErr.Code = errResp.Code
+			if errResp.Message != "" {
+				apiErr.Message = errResp.Message
+			} else {
+				apiErr.Message = errResp.Msg
+			}
+		}
+		if apiErr.Message == "" {
+			apiErr.Message = string(body)
+		}
+		return nil, apiErr
+	}
+
+	return body, nil
 }
 
 func (c *Client) do(ctx context.Context, method, path string, params map[string]string, result interface{}) error {

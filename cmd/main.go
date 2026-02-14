@@ -134,7 +134,9 @@ func cmdTweets(ctx context.Context, client *utools.Client, args []string) {
 	userID := args[0]
 	maxPages := 1
 	if len(args) > 1 {
-		fmt.Sscanf(args[1], "%d", &maxPages)
+		if _, err := fmt.Sscanf(args[1], "%d", &maxPages); err != nil || maxPages <= 0 {
+			log.Fatalf("invalid max_pages: %q (must be a positive integer)", args[1])
+		}
 	}
 
 	log.Printf("Fetching tweets for user %s (max %d pages) ...", userID, maxPages)

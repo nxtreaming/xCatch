@@ -3,6 +3,7 @@ package config
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -97,6 +98,9 @@ func Load(path string) *Config {
 	// Try loading from file first
 	cfg, err := LoadFromFile(path)
 	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Printf("config warning: failed to parse %s, falling back to defaults/env: %v", path, err)
+		}
 		// File not found or parse error, start from defaults
 		cfg = &Config{
 			BaseURL:    DefaultBaseURL,

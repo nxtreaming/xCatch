@@ -1,11 +1,18 @@
 package utools
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+var (
+	ErrAuthTokenRequired = errors.New("utools: auth_token is required for this endpoint")
+)
 
 // APIError represents an error returned by the uTools API.
 type APIError struct {
 	StatusCode int
-	Code       int    // Twitter error code (e.g. 88 = rate limit)
+	Code       int // Twitter error code (e.g. 88 = rate limit)
 	Message    string
 	RawBody    string
 }

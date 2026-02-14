@@ -132,10 +132,12 @@ func (c *Client) GetUserArticlesTweets(ctx context.Context, userID string, curso
 // Requires auth_token to be set in the client config.
 // cursor can be empty for the first page.
 func (c *Client) GetHomeTimeline(ctx context.Context, cursor string) (json.RawMessage, error) {
-	params := map[string]string{}
-	if c.authToken != "" {
-		params["auth_token"] = c.authToken
+	if c.authToken == "" {
+		return nil, ErrAuthTokenRequired
 	}
+
+	params := map[string]string{}
+	params["auth_token"] = c.authToken
 	if cursor != "" {
 		params["cursor"] = cursor
 	}
@@ -148,10 +150,12 @@ func (c *Client) GetHomeTimeline(ctx context.Context, cursor string) (json.RawMe
 // Requires auth_token to be set in the client config.
 // cursor can be empty for the first page.
 func (c *Client) GetMentionsTimeline(ctx context.Context, cursor string) (json.RawMessage, error) {
-	params := map[string]string{}
-	if c.authToken != "" {
-		params["auth_token"] = c.authToken
+	if c.authToken == "" {
+		return nil, ErrAuthTokenRequired
 	}
+
+	params := map[string]string{}
+	params["auth_token"] = c.authToken
 	if cursor != "" {
 		params["cursor"] = cursor
 	}
