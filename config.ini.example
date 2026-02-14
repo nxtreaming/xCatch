@@ -5,6 +5,9 @@ api_key = your_api_key_here
 # (optional) Twitter auth_token, required by some endpoints (e.g. HomeTimeline)
 # auth_token =
 
+# (optional) Twitter ct0 cookie, often used together with auth_token
+# ct0 =
+
 # (optional) API base URL, default https://fapi.uk
 # base_url = https://fapi.uk
 

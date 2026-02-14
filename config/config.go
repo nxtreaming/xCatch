@@ -31,6 +31,10 @@ type Config struct {
 	// (e.g. HomeTimeline, Notifications).
 	AuthToken string
 
+	// CT0 is the Twitter ct0 cookie value. Some authenticated endpoints
+	// require both auth_token and ct0.
+	CT0 string
+
 	// Timeout is the HTTP request timeout.
 	Timeout time.Duration
 
@@ -44,7 +48,7 @@ type Config struct {
 // LoadFromFile creates a Config by reading a config.ini file.
 // The INI file format supports [xcatch] section with keys:
 //
-//	api_key, auth_token, base_url, timeout_sec, max_retries, rate_limit
+//	api_key, auth_token, ct0, base_url, timeout_sec, max_retries, rate_limit
 func LoadFromFile(path string) (*Config, error) {
 	kvs, err := parseINI(path, "xcatch")
 	if err != nil {
@@ -63,6 +67,9 @@ func LoadFromFile(path string) (*Config, error) {
 	}
 	if v, ok := kvs["auth_token"]; ok {
 		cfg.AuthToken = v
+	}
+	if v, ok := kvs["ct0"]; ok {
+		cfg.CT0 = v
 	}
 	if v, ok := kvs["base_url"]; ok && v != "" {
 		cfg.BaseURL = v
@@ -118,6 +125,9 @@ func Load(path string) *Config {
 	}
 	if v := os.Getenv("XCATCH_AUTH_TOKEN"); v != "" {
 		cfg.AuthToken = v
+	}
+	if v := os.Getenv("XCATCH_CT0"); v != "" {
+		cfg.CT0 = v
 	}
 	if v := os.Getenv("XCATCH_BASE_URL"); v != "" {
 		cfg.BaseURL = v

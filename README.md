@@ -74,6 +74,7 @@ cp config.ini.example config.ini
 [xcatch]
 api_key = your_api_key_here
 # auth_token = your_auth_token_here
+# ct0 = your_ct0_cookie_here
 # base_url = https://fapi.uk
 # timeout_sec = 30
 # max_retries = 3
@@ -90,6 +91,7 @@ api_key = your_api_key_here
 |------|------|------|--------|
 | `XCATCH_API_KEY` | ✅ | uTools API Key | - |
 | `XCATCH_AUTH_TOKEN` | ❌ | Twitter auth_token（部分接口需要） | - |
+| `XCATCH_CT0` | ❌ | Twitter ct0（鉴权接口建议与 auth_token 一起设置） | - |
 | `XCATCH_BASE_URL` | ❌ | API 基础 URL | `https://fapi.uk` |
 | `XCATCH_TIMEOUT_SEC` | ❌ | HTTP 超时（秒） | `30` |
 | `XCATCH_MAX_RETRIES` | ❌ | 最大重试次数 | `3` |
@@ -108,6 +110,8 @@ api_key = your_api_key_here
 - `GetAccountAnalytics`
 
 可通过 `config.ini` 的 `auth_token` 字段或环境变量 `XCATCH_AUTH_TOKEN` 设置。
+
+根据官方 `go-client-generated` 参考实现，`GetHomeTimeline` / `GetMentionsTimeline` 这类接口通常还会携带 `ct0`。本项目会在配置了 `ct0` 时自动透传（`config.ini` 的 `ct0` 字段或环境变量 `XCATCH_CT0`）。
 
 ### 使用示例
 

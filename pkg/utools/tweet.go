@@ -138,6 +138,9 @@ func (c *Client) GetHomeTimeline(ctx context.Context, cursor string) (json.RawMe
 
 	params := map[string]string{}
 	params["auth_token"] = c.authToken
+	if c.ct0 != "" {
+		params["ct0"] = c.ct0
+	}
 	if cursor != "" {
 		params["cursor"] = cursor
 	}
@@ -156,6 +159,9 @@ func (c *Client) GetMentionsTimeline(ctx context.Context, cursor string) (json.R
 
 	params := map[string]string{}
 	params["auth_token"] = c.authToken
+	if c.ct0 != "" {
+		params["ct0"] = c.ct0
+	}
 	if cursor != "" {
 		params["cursor"] = cursor
 	}

@@ -25,6 +25,7 @@ type Client struct {
 	baseURL    string
 	apiKey     string
 	authToken  string
+	ct0        string
 	httpClient *http.Client
 	maxRetries int
 	limiter    *rate.Limiter
@@ -40,6 +41,7 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		baseURL:   strings.TrimRight(cfg.BaseURL, "/"),
 		apiKey:    cfg.APIKey,
 		authToken: cfg.AuthToken,
+		ct0:       cfg.CT0,
 		httpClient: &http.Client{
 			Timeout: cfg.Timeout,
 		},

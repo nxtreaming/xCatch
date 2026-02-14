@@ -106,6 +106,9 @@ func (c *Client) GetAccountAnalytics(ctx context.Context) (json.RawMessage, erro
 
 	params := map[string]string{}
 	params["auth_token"] = c.authToken
+	if c.ct0 != "" {
+		params["ct0"] = c.ct0
+	}
 	var result json.RawMessage
 	err := c.Get(ctx, "/api/base/apitools/accountAnalytics", params, &result)
 	return result, err
