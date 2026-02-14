@@ -141,7 +141,7 @@ func cmdTweets(ctx context.Context, client *utools.Client, args []string) {
 
 	log.Printf("Fetching tweets for user %s (max %d pages) ...", userID, maxPages)
 
-	iter := client.NewPageIterator("/api/base/apitools/userTweetsV2", map[string]string{
+	iter := client.NewPageIterator("/userTweetsV2", map[string]string{
 		"userId": userID,
 	}, maxPages)
 

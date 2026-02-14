@@ -19,7 +19,7 @@ func (c *Client) GetFollowers(ctx context.Context, userID string, cursor string)
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/followersListV2", params, &result)
+	err := c.Get(ctx, "/followersListV2", params, &result)
 	return result, err
 }
 
@@ -33,7 +33,7 @@ func (c *Client) GetFollowings(ctx context.Context, userID string, cursor string
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/followingsListV2", params, &result)
+	err := c.Get(ctx, "/followingsListV2", params, &result)
 	return result, err
 }
 
@@ -47,7 +47,7 @@ func (c *Client) GetFollowerIDs(ctx context.Context, userID string, cursor strin
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/followersIds", params, &result)
+	err := c.Get(ctx, "/followersIds", params, &result)
 	return result, err
 }
 
@@ -61,7 +61,7 @@ func (c *Client) GetFollowingIDs(ctx context.Context, userID string, cursor stri
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/followingsIds", params, &result)
+	err := c.Get(ctx, "/followingsIds", params, &result)
 	return result, err
 }
 
@@ -72,7 +72,7 @@ func (c *Client) GetRelationship(ctx context.Context, sourceID, targetID string)
 		"targetId": targetID,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/getFriendshipsShow", params, &result)
+	err := c.Get(ctx, "/getFriendshipsShow", params, &result)
 	return result, err
 }
 
@@ -86,7 +86,7 @@ func (c *Client) GetFollowersYouKnow(ctx context.Context, userID string, cursor 
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/followersYouKnowV2", params, &result)
+	err := c.Get(ctx, "/followersYouKnowV2", params, &result)
 	return result, err
 }
 
@@ -100,7 +100,7 @@ func (c *Client) GetBlueVerifiedFollowers(ctx context.Context, userID string, cu
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/blueVerifiedFollowersV2", params, &result)
+	err := c.Get(ctx, "/blueVerifiedFollowersV2", params, &result)
 	return result, err
 }
 
@@ -118,7 +118,7 @@ func (c *Client) GetListByUser(ctx context.Context, userID, screenName string) (
 		params["screenName"] = screenName
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/getListByUserIdOrScreenName", params, &result)
+	err := c.Get(ctx, "/getListByUserIdOrScreenName", params, &result)
 	return result, err
 }
 
@@ -132,7 +132,7 @@ func (c *Client) GetListMembers(ctx context.Context, listID string, cursor strin
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/listMembersByListIdV2", params, &result)
+	err := c.Get(ctx, "/listMembersByListIdV2", params, &result)
 	return result, err
 }
 
@@ -146,7 +146,7 @@ func (c *Client) GetListTimeline(ctx context.Context, listID string, cursor stri
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/listLatestTweetsTimeline", params, &result)
+	err := c.Get(ctx, "/listLatestTweetsTimeline", params, &result)
 	return result, err
 }
 
@@ -160,7 +160,7 @@ func (c *Client) GetCommunitiesByScreenName(ctx context.Context, screenName stri
 		"screenName": screenName,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/getCommunitiesByScreenName", params, &result)
+	err := c.Get(ctx, "/getCommunitiesByScreenName", params, &result)
 	return result, err
 }
 
@@ -170,7 +170,7 @@ func (c *Client) GetCommunityInfo(ctx context.Context, communityID string) (json
 		"communityId": communityID,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/communitiesFetchOneQuery", params, &result)
+	err := c.Get(ctx, "/communitiesFetchOneQuery", params, &result)
 	return result, err
 }
 
@@ -184,7 +184,7 @@ func (c *Client) GetCommunityTweets(ctx context.Context, communityID string, cur
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/communitiesTweetsTimelineV2", params, &result)
+	err := c.Get(ctx, "/communitiesTweetsTimelineV2", params, &result)
 	return result, err
 }
 
@@ -198,6 +198,6 @@ func (c *Client) GetCommunityMembers(ctx context.Context, communityID string, cu
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/communitiesMemberV2", params, &result)
+	err := c.Get(ctx, "/communitiesMemberV2", params, &result)
 	return result, err
 }

@@ -17,7 +17,7 @@ func (c *Client) GetUserByScreenName(ctx context.Context, screenName string) (js
 		"screenName": screenName,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/screenname", params, &result)
+	err := c.Get(ctx, "/screenname", params, &result)
 	return result, err
 }
 
@@ -27,7 +27,7 @@ func (c *Client) GetUserByID(ctx context.Context, userID string) (json.RawMessag
 		"userId": userID,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/id", params, &result)
+	err := c.Get(ctx, "/id", params, &result)
 	return result, err
 }
 
@@ -38,7 +38,7 @@ func (c *Client) GetUsersByIDs(ctx context.Context, userIDs []string) (json.RawM
 		"userIds": strings.Join(userIDs, ","),
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/ids", params, &result)
+	err := c.Get(ctx, "/ids", params, &result)
 	return result, err
 }
 
@@ -48,7 +48,7 @@ func (c *Client) GetUsernameChanges(ctx context.Context, userID string) (json.Ra
 		"userId": userID,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/usernameChanges", params, &result)
+	err := c.Get(ctx, "/usernameChanges", params, &result)
 	return result, err
 }
 
@@ -63,7 +63,7 @@ func (c *Client) LookupUser(ctx context.Context, screenName, userID string) (jso
 		params["userId"] = userID
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/lookup", params, &result)
+	err := c.Get(ctx, "/lookup", params, &result)
 	return result, err
 }
 
@@ -73,7 +73,7 @@ func (c *Client) GetUserByScreenNameV2(ctx context.Context, screenName string) (
 		"screenName": screenName,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/userByScreenNameV2", params, &result)
+	err := c.Get(ctx, "/userByScreenNameV2", params, &result)
 	return result, err
 }
 
@@ -83,7 +83,7 @@ func (c *Client) GetUserByIDV2(ctx context.Context, userID string) (json.RawMess
 		"userId": userID,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/uerByIdRestIdV2", params, &result)
+	err := c.Get(ctx, "/uerByIdRestIdV2", params, &result)
 	return result, err
 }
 
@@ -93,7 +93,7 @@ func (c *Client) GetUsersByIDsV2(ctx context.Context, userIDs []string) (json.Ra
 		"userIds": strings.Join(userIDs, ","),
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/usersByIdRestIds", params, &result)
+	err := c.Get(ctx, "/usersByIdRestIds", params, &result)
 	return result, err
 }
 
@@ -110,6 +110,6 @@ func (c *Client) GetAccountAnalytics(ctx context.Context) (json.RawMessage, erro
 		params["ct0"] = c.ct0
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/accountAnalytics", params, &result)
+	err := c.Get(ctx, "/accountAnalytics", params, &result)
 	return result, err
 }

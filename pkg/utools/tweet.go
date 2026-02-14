@@ -20,7 +20,7 @@ func (c *Client) GetUserTweets(ctx context.Context, userID string, cursor string
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/userTweetsV2", params, &result)
+	err := c.Get(ctx, "/userTweetsV2", params, &result)
 	return result, err
 }
 
@@ -34,7 +34,7 @@ func (c *Client) GetUserTimeline(ctx context.Context, userID string, cursor stri
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/userTimeline", params, &result)
+	err := c.Get(ctx, "/userTimeline", params, &result)
 	return result, err
 }
 
@@ -48,7 +48,7 @@ func (c *Client) GetTweetDetail(ctx context.Context, tweetID string, cursor stri
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/tweetTimeline", params, &result)
+	err := c.Get(ctx, "/tweetTimeline", params, &result)
 	return result, err
 }
 
@@ -58,7 +58,7 @@ func (c *Client) GetTweetSimple(ctx context.Context, tweetID string) (json.RawMe
 		"tweetId": tweetID,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/tweetSimple", params, &result)
+	err := c.Get(ctx, "/tweetSimple", params, &result)
 	return result, err
 }
 
@@ -68,7 +68,7 @@ func (c *Client) GetTweetsByIDs(ctx context.Context, tweetIDs []string) (json.Ra
 		"tweetIds": strings.Join(tweetIDs, ","),
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/tweetResultsByRestIds", params, &result)
+	err := c.Get(ctx, "/tweetResultsByRestIds", params, &result)
 	return result, err
 }
 
@@ -82,7 +82,7 @@ func (c *Client) GetUserReplies(ctx context.Context, userID string, cursor strin
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/userTweetReply", params, &result)
+	err := c.Get(ctx, "/userTweetReply", params, &result)
 	return result, err
 }
 
@@ -96,7 +96,7 @@ func (c *Client) GetUserLikes(ctx context.Context, userID string, cursor string)
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/userLikeV2", params, &result)
+	err := c.Get(ctx, "/userLikeV2", params, &result)
 	return result, err
 }
 
@@ -110,7 +110,7 @@ func (c *Client) GetUserHighlights(ctx context.Context, userID string, cursor st
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/highlightsV2", params, &result)
+	err := c.Get(ctx, "/highlightsV2", params, &result)
 	return result, err
 }
 
@@ -124,7 +124,7 @@ func (c *Client) GetUserArticlesTweets(ctx context.Context, userID string, curso
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/userArticlesTweets", params, &result)
+	err := c.Get(ctx, "/userArticlesTweets", params, &result)
 	return result, err
 }
 
@@ -145,7 +145,7 @@ func (c *Client) GetHomeTimeline(ctx context.Context, cursor string) (json.RawMe
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/homeTimeline", params, &result)
+	err := c.Get(ctx, "/homeTimeline", params, &result)
 	return result, err
 }
 
@@ -166,7 +166,7 @@ func (c *Client) GetMentionsTimeline(ctx context.Context, cursor string) (json.R
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/mentionsTimeline", params, &result)
+	err := c.Get(ctx, "/mentionsTimeline", params, &result)
 	return result, err
 }
 
@@ -184,7 +184,7 @@ func (c *Client) GetRetweeters(ctx context.Context, tweetID string, cursor strin
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/retweetersV2", params, &result)
+	err := c.Get(ctx, "/retweetersV2", params, &result)
 	return result, err
 }
 
@@ -198,7 +198,7 @@ func (c *Client) GetFavoriters(ctx context.Context, tweetID string, cursor strin
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/favoritersV2", params, &result)
+	err := c.Get(ctx, "/favoritersV2", params, &result)
 	return result, err
 }
 
@@ -212,6 +212,6 @@ func (c *Client) GetQuotes(ctx context.Context, tweetID string, cursor string) (
 		params["cursor"] = cursor
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/quotesV2", params, &result)
+	err := c.Get(ctx, "/quotesV2", params, &result)
 	return result, err
 }

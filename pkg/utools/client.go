@@ -20,6 +20,8 @@ import (
 	"github.com/xCatch/xcatch/config"
 )
 
+const apiToolsBasePath = "/api/base/apitools"
+
 // Client is the uTools API HTTP client with built-in auth, retry, and rate limiting.
 type Client struct {
 	baseURL    string
@@ -158,8 +160,21 @@ func isRetryableError(err error) bool {
 	return false
 }
 
+func resolveEndpointPath(path string) string {
+	if path == "" {
+		return apiToolsBasePath
+	}
+	if strings.HasPrefix(path, apiToolsBasePath+"/") || path == apiToolsBasePath {
+		return path
+	}
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	return apiToolsBasePath + path
+}
+
 func (c *Client) doRaw(ctx context.Context, method, path string, params map[string]string) ([]byte, error) {
-	reqURL := c.baseURL + path
+	reqURL := c.baseURL + resolveEndpointPath(path)
 
 	merged := make(map[string]string, len(params)+1)
 	for k, v := range params {
@@ -249,7 +264,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params map[stri
 
 func (c *Client) do(ctx context.Context, method, path string, params map[string]string, result interface{}) error {
 	// Build URL
-	reqURL := c.baseURL + path
+	reqURL := c.baseURL + resolveEndpointPath(path)
 
 	// Copy params to avoid mutating the caller's map, and inject apiKey
 	merged := make(map[string]string, len(params)+1)
@@ -390,7 +405,7 @@ func (c *Client) do(ctx context.Context, method, path string, params map[string]
 func (c *Client) TokenSync(ctx context.Context) error {
 	params := map[string]string{}
 	var result json.RawMessage
-	return c.Get(ctx, "/api/base/apitools/tokenSync", params, &result)
+	return c.Get(ctx, "/tokenSync", params, &result)
 }
 
 // Truncate shortens a string to maxLen characters, appending "..." if truncated.

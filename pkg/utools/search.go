@@ -87,7 +87,7 @@ func (c *Client) SearchWithOptions(ctx context.Context, query string, opts Searc
 		params["until"] = opts.Until
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/search", params, &result)
+	err := c.Get(ctx, "/search", params, &result)
 	return result, err
 }
 
@@ -97,7 +97,7 @@ func (c *Client) SearchBox(ctx context.Context, query string) (json.RawMessage, 
 		"words": query,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/searchBox", params, &result)
+	err := c.Get(ctx, "/searchBox", params, &result)
 	return result, err
 }
 
@@ -111,7 +111,7 @@ func (c *Client) GetTrends(ctx context.Context, woeid string) (json.RawMessage, 
 		params["woeid"] = woeid
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/trends", params, &result)
+	err := c.Get(ctx, "/trends", params, &result)
 	return result, err
 }
 
@@ -119,7 +119,7 @@ func (c *Client) GetTrends(ctx context.Context, woeid string) (json.RawMessage, 
 func (c *Client) GetTrending(ctx context.Context) (json.RawMessage, error) {
 	params := map[string]string{}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/trending", params, &result)
+	err := c.Get(ctx, "/trending", params, &result)
 	return result, err
 }
 
@@ -127,7 +127,7 @@ func (c *Client) GetTrending(ctx context.Context) (json.RawMessage, error) {
 func (c *Client) GetNews(ctx context.Context) (json.RawMessage, error) {
 	params := map[string]string{}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/news", params, &result)
+	err := c.Get(ctx, "/news", params, &result)
 	return result, err
 }
 
@@ -135,7 +135,7 @@ func (c *Client) GetNews(ctx context.Context) (json.RawMessage, error) {
 func (c *Client) GetExplorePage(ctx context.Context) (json.RawMessage, error) {
 	params := map[string]string{}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/explore", params, &result)
+	err := c.Get(ctx, "/explore", params, &result)
 	return result, err
 }
 
@@ -143,7 +143,7 @@ func (c *Client) GetExplorePage(ctx context.Context) (json.RawMessage, error) {
 func (c *Client) GetSports(ctx context.Context) (json.RawMessage, error) {
 	params := map[string]string{}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/sports", params, &result)
+	err := c.Get(ctx, "/sports", params, &result)
 	return result, err
 }
 
@@ -151,6 +151,6 @@ func (c *Client) GetSports(ctx context.Context) (json.RawMessage, error) {
 func (c *Client) GetEntertainment(ctx context.Context) (json.RawMessage, error) {
 	params := map[string]string{}
 	var result json.RawMessage
-	err := c.Get(ctx, "/api/base/apitools/entertainment", params, &result)
+	err := c.Get(ctx, "/entertainment", params, &result)
 	return result, err
 }
