@@ -75,13 +75,13 @@ cp config.ini.example config.ini
 api_key = your_api_key_here
 # auth_token = your_auth_token_here
 # ct0 = your_ct0_cookie_here
+# XCATCH_TEST_USER_ID = 44196397
+# XCATCH_TEST_SCREEN_NAME = elonmusk
 # base_url = https://fapi.uk
 # timeout_sec = 30
 # max_retries = 3
 # rate_limit = 5
 ```
-
-> ⚠️ `config.ini` 已被 `.gitignore` 排除，不会提交到 Git。
 
 #### 方式二：环境变量
 
@@ -112,6 +112,46 @@ api_key = your_api_key_here
 可通过 `config.ini` 的 `auth_token` 字段或环境变量 `XCATCH_AUTH_TOKEN` 设置。
 
 根据官方 `go-client-generated` 参考实现，`GetHomeTimeline` / `GetMentionsTimeline` 这类接口通常还会携带 `ct0`。本项目会在配置了 `ct0` 时自动透传（`config.ini` 的 `ct0` 字段或环境变量 `XCATCH_CT0`）。
+
+## 集成测试（真实 API）
+
+项目包含两类测试：
+
+- 单元测试（mock server）：`go test ./...`
+- 集成测试（真实请求）：`go test -tags integration ...`
+
+### User 真实集成测试前置条件
+
+1. 设置运行开关（必须）
+   - PowerShell: `$env:XCATCH_RUN_INTEGRATION="1"`
+2. 提供 API Key（必须）
+   - `config.ini` 的 `api_key`，或环境变量 `XCATCH_API_KEY`
+3. 提供测试用户（建议）
+   - `XCATCH_TEST_USER_ID`（推荐在 `config.ini` 的 `[xcatch]` 下配置）
+   - `XCATCH_TEST_SCREEN_NAME`（用于 screenName 相关接口）
+4. 鉴权接口（可选）
+   - `GetAccountAnalytics` 需要 `auth_token`（建议同时设置 `ct0`）
+
+### 运行命令
+
+```powershell
+# 全量 user 真实集成测试
+$env:XCATCH_RUN_INTEGRATION="1"
+go test -tags integration ./pkg/utools -run TestUserIntegration_RealAPI -v
+
+# 仅测账号分析（需要 auth_token）
+$env:XCATCH_RUN_INTEGRATION="1"
+go test -tags integration ./pkg/utools -run TestUserIntegration_RealAPI/GetAccountAnalytics -v
+```
+
+### 为什么会看到 SKIP
+
+以下情况会被标记为 `SKIP`（这是设计行为，不是本地代码失败）：
+
+- 缺少前置配置（如 `XCATCH_TEST_USER_ID`、`XCATCH_TEST_SCREEN_NAME`、`auth_token`）
+- 上游接口返回 `5xx`（例如 500/502）
+
+只有非 `5xx` 的真实调用错误才会导致测试失败。
 
 ### 使用示例
 
@@ -242,11 +282,11 @@ func main() {
 
 | SDK 方法 | Path |
 |---|---|
-| `GetUserByScreenName` | `/api/base/apitools/screenname` |
-| `GetUserByID` | `/api/base/apitools/id` |
-| `GetUsersByIDs` | `/api/base/apitools/ids` |
+| `GetUserByScreenName` | `/api/base/apitools/getUserByIdOrNameShow` |
+| `GetUserByID` | `/api/base/apitools/usersByIdRestIds` |
+| `GetUsersByIDs` | `/api/base/apitools/usersByIdRestIds` |
 | `GetUsernameChanges` | `/api/base/apitools/usernameChanges` |
-| `LookupUser` | `/api/base/apitools/lookup` |
+| `LookupUser` | `/api/base/apitools/getUserByIdOrNameLookup` |
 | `GetUserByScreenNameV2` | `/api/base/apitools/userByScreenNameV2` |
 | `GetUserByIDV2` | `/api/base/apitools/uerByIdRestIdV2` |
 | `GetUsersByIDsV2` | `/api/base/apitools/usersByIdRestIds` |
