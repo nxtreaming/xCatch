@@ -64,17 +64,29 @@ func LoadFromFile(path string) (*Config, error) {
 
 	if v, ok := kvs["api_key"]; ok {
 		cfg.APIKey = v
+	} else if v, ok := kvs["xcatch_api_key"]; ok {
+		cfg.APIKey = v
 	}
 	if v, ok := kvs["auth_token"]; ok {
+		cfg.AuthToken = v
+	} else if v, ok := kvs["xcatch_auth_token"]; ok {
 		cfg.AuthToken = v
 	}
 	if v, ok := kvs["ct0"]; ok {
 		cfg.CT0 = v
+	} else if v, ok := kvs["xcatch_ct0"]; ok {
+		cfg.CT0 = v
 	}
 	if v, ok := kvs["base_url"]; ok && v != "" {
 		cfg.BaseURL = v
+	} else if v, ok := kvs["xcatch_base_url"]; ok && v != "" {
+		cfg.BaseURL = v
 	}
 	if v, ok := kvs["timeout_sec"]; ok {
+		if sec, err := strconv.Atoi(v); err == nil && sec > 0 {
+			cfg.Timeout = time.Duration(sec) * time.Second
+		}
+	} else if v, ok := kvs["xcatch_timeout_sec"]; ok {
 		if sec, err := strconv.Atoi(v); err == nil && sec > 0 {
 			cfg.Timeout = time.Duration(sec) * time.Second
 		}
@@ -83,8 +95,16 @@ func LoadFromFile(path string) (*Config, error) {
 		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
 			cfg.MaxRetries = n
 		}
+	} else if v, ok := kvs["xcatch_max_retries"]; ok {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			cfg.MaxRetries = n
+		}
 	}
 	if v, ok := kvs["rate_limit"]; ok {
+		if f, err := strconv.ParseFloat(v, 64); err == nil && f > 0 {
+			cfg.RateLimit = f
+		}
+	} else if v, ok := kvs["xcatch_rate_limit"]; ok {
 		if f, err := strconv.ParseFloat(v, 64); err == nil && f > 0 {
 			cfg.RateLimit = f
 		}
@@ -161,6 +181,7 @@ func parseINI(path, section string) (map[string]string, error) {
 	defer f.Close()
 
 	result := make(map[string]string)
+	targetSection := strings.ToLower(strings.TrimSpace(section))
 	currentSection := ""
 	scanner := bufio.NewScanner(f)
 
@@ -174,15 +195,15 @@ func parseINI(path, section string) (map[string]string, error) {
 
 		// Section header
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			currentSection = strings.TrimSpace(line[1 : len(line)-1])
+			currentSection = strings.ToLower(strings.TrimSpace(line[1 : len(line)-1]))
 			continue
 		}
 
 		// Key = Value
-		if currentSection == section {
+		if currentSection == targetSection {
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) == 2 {
-				key := strings.TrimSpace(parts[0])
+				key := strings.ToLower(strings.TrimSpace(parts[0]))
 				val := strings.TrimSpace(parts[1])
 				result[key] = val
 			}

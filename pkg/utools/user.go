@@ -17,17 +17,17 @@ func (c *Client) GetUserByScreenName(ctx context.Context, screenName string) (js
 		"screenName": screenName,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/screenname", params, &result)
+	err := c.Get(ctx, "/getUserByIdOrNameShow", params, &result)
 	return result, err
 }
 
 // GetUserByID retrieves user information by Twitter user ID (rest_id).
 func (c *Client) GetUserByID(ctx context.Context, userID string) (json.RawMessage, error) {
 	params := map[string]string{
-		"userId": userID,
+		"userIds": userID,
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/id", params, &result)
+	err := c.Get(ctx, "/usersByIdRestIds", params, &result)
 	return result, err
 }
 
@@ -38,7 +38,7 @@ func (c *Client) GetUsersByIDs(ctx context.Context, userIDs []string) (json.RawM
 		"userIds": strings.Join(userIDs, ","),
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/ids", params, &result)
+	err := c.Get(ctx, "/usersByIdRestIds", params, &result)
 	return result, err
 }
 
@@ -63,7 +63,7 @@ func (c *Client) LookupUser(ctx context.Context, screenName, userID string) (jso
 		params["userId"] = userID
 	}
 	var result json.RawMessage
-	err := c.Get(ctx, "/lookup", params, &result)
+	err := c.Get(ctx, "/getUserByIdOrNameLookup", params, &result)
 	return result, err
 }
 
