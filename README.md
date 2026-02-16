@@ -146,6 +146,16 @@ api_key = your_api_key_here
 5. 鉴权时间线接口（可选）
    - `GetHomeTimeline` / `GetMentionsTimeline` 需要 `auth_token`（建议同时设置 `ct0`）
 
+### Search 真实集成测试前置条件
+
+1. 设置运行开关（必须）
+   - PowerShell: `$env:XCATCH_RUN_INTEGRATION="1"`
+2. 提供 API Key（必须）
+   - `config.ini` 的 `api_key`，或环境变量 `XCATCH_API_KEY`
+3. 搜索参数（可选）
+   - `XCATCH_TEST_SEARCH_QUERY`（默认 `bitcoin`）
+   - `XCATCH_TEST_WOEID`（默认 `1`，全球）
+
 ### 运行命令
 
 ```powershell
@@ -164,6 +174,14 @@ go test -tags integration ./pkg/utools -run TestTweetIntegration_RealAPI -v
 # 仅测 tweet detail（需要 XCATCH_TEST_TWEET_ID）
 $env:XCATCH_RUN_INTEGRATION="1"
 go test -tags integration ./pkg/utools -run "TestTweetIntegration_RealAPI/TweetID required group/GetTweetDetail" -v
+
+# 全量 search 真实集成测试
+$env:XCATCH_RUN_INTEGRATION="1"
+go test -tags integration ./pkg/utools -run TestSearchIntegration_RealAPI -v
+
+# 仅测 trends（可通过 XCATCH_TEST_WOEID 指定地区）
+$env:XCATCH_RUN_INTEGRATION="1"
+go test -tags integration ./pkg/utools -run TestSearchIntegration_RealAPI/GetTrends -v
 ```
 
 ### 为什么会看到 SKIP
@@ -172,6 +190,7 @@ go test -tags integration ./pkg/utools -run "TestTweetIntegration_RealAPI/TweetI
 
 - 缺少前置配置（如 `XCATCH_TEST_USER_ID`、`XCATCH_TEST_SCREEN_NAME`、`auth_token`）
 - 缺少 `XCATCH_TEST_TWEET_ID` 且自动提取 tweetId 失败（仅影响 tweetId 相关子测试）
+- Search 测试未设置可选参数时使用默认值（`XCATCH_TEST_SEARCH_QUERY=bitcoin`、`XCATCH_TEST_WOEID=1`）
 - 上游接口返回 `5xx`（例如 500/502）
 
 只有非 `5xx` 的真实调用错误才会导致测试失败。
