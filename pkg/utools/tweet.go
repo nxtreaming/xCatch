@@ -3,6 +3,7 @@ package utools
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 )
 
@@ -42,7 +43,9 @@ func (c *Client) GetUserTimeline(ctx context.Context, userID string, cursor stri
 // cursor can be empty for the first page of replies.
 func (c *Client) GetTweetDetail(ctx context.Context, tweetID string, cursor string) (json.RawMessage, error) {
 	params := map[string]string{
-		"tweetId": tweetID,
+		"tweetId":  tweetID,
+		"tweet_id": tweetID,
+		"id":       tweetID,
 	}
 	if cursor != "" {
 		params["cursor"] = cursor
@@ -55,7 +58,10 @@ func (c *Client) GetTweetDetail(ctx context.Context, tweetID string, cursor stri
 // GetTweetSimple retrieves brief information about a tweet.
 func (c *Client) GetTweetSimple(ctx context.Context, tweetID string) (json.RawMessage, error) {
 	params := map[string]string{
-		"tweetId": tweetID,
+		"tweetId":  tweetID,
+		"tweet_id": tweetID,
+		"tweetIds": tweetID,
+		"id":       tweetID,
 	}
 	var result json.RawMessage
 	err := c.Get(ctx, "/tweetSimple", params, &result)
@@ -86,9 +92,24 @@ func (c *Client) GetUserReplies(ctx context.Context, userID string, cursor strin
 	return result, err
 }
 
-// GetUserLikes retrieves tweets liked by a user (V2 endpoint).
+// GetUserLikes retrieves tweets liked by a user.
+// Uses the official Get Tweet legacy endpoint (favoritesList).
 // cursor can be empty for the first page.
 func (c *Client) GetUserLikes(ctx context.Context, userID string, cursor string) (json.RawMessage, error) {
+	params := map[string]string{
+		"userId": userID,
+	}
+	if cursor != "" {
+		params["cursor"] = cursor
+	}
+	var result json.RawMessage
+	err := c.Get(ctx, "/favoritesList", params, &result)
+	return result, err
+}
+
+// GetUserLikesV2 retrieves tweets liked by a user (V2 endpoint).
+// cursor can be empty for the first page.
+func (c *Client) GetUserLikesV2(ctx context.Context, userID string, cursor string) (json.RawMessage, error) {
 	params := map[string]string{
 		"userId": userID,
 	}
@@ -123,9 +144,39 @@ func (c *Client) GetUserArticlesTweets(ctx context.Context, userID string, curso
 	if cursor != "" {
 		params["cursor"] = cursor
 	}
+
+	// Upstream has changed this endpoint name in some deployments.
+	// Try known candidates before failing.
+	paths := []string{"/userArticlesTweets", "/userArticlesTweetsV2", "/userArticleTweets"}
 	var result json.RawMessage
-	err := c.Get(ctx, "/userArticlesTweets", params, &result)
-	return result, err
+	var lastErr error
+	for i, path := range paths {
+		err := c.Get(ctx, path, params, &result)
+		if err == nil {
+			return result, nil
+		}
+		lastErr = err
+		if i == len(paths)-1 || !shouldRetryWithNextTweetEndpoint(err) {
+			return nil, err
+		}
+	}
+	return nil, lastErr
+}
+
+func shouldRetryWithNextTweetEndpoint(err error) bool {
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+	if apiErr.StatusCode >= 500 {
+		return true
+	}
+
+	msg := strings.ToLower(apiErr.Message + " " + apiErr.RawBody)
+	if strings.Contains(msg, "no static resource") || strings.Contains(msg, "not found") {
+		return true
+	}
+	return false
 }
 
 // GetHomeTimeline retrieves the authenticated user's home timeline.
@@ -188,11 +239,36 @@ func (c *Client) GetRetweeters(ctx context.Context, tweetID string, cursor strin
 	return result, err
 }
 
+// GetRetweetersIDs retrieves retweeter IDs for a tweet.
+// Uses the official deprecated Get Tweet endpoint (retweetersIds).
+// cursor can be empty for the first page.
+func (c *Client) GetRetweetersIDs(ctx context.Context, tweetID string, cursor string) (json.RawMessage, error) {
+	params := map[string]string{
+		"tweetId":  tweetID,
+		"tweet_id": tweetID,
+		"id":       tweetID,
+	}
+	if cursor != "" {
+		params["cursor"] = cursor
+	}
+	var result json.RawMessage
+	err := c.Get(ctx, "/retweetersIds", params, &result)
+	return result, err
+}
+
 // GetFavoriters retrieves the list of users who liked a tweet (V2 endpoint).
 // cursor can be empty for the first page.
 func (c *Client) GetFavoriters(ctx context.Context, tweetID string, cursor string) (json.RawMessage, error) {
+	if c.authToken == "" {
+		return nil, ErrAuthTokenRequired
+	}
+
 	params := map[string]string{
-		"tweetId": tweetID,
+		"tweetId":    tweetID,
+		"auth_token": c.authToken,
+	}
+	if c.ct0 != "" {
+		params["ct0"] = c.ct0
 	}
 	if cursor != "" {
 		params["cursor"] = cursor

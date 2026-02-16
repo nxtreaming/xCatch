@@ -132,6 +132,20 @@ api_key = your_api_key_here
 4. 鉴权接口（可选）
    - `GetAccountAnalytics` 需要 `auth_token`（建议同时设置 `ct0`）
 
+### Tweet 真实集成测试前置条件
+
+1. 设置运行开关（必须）
+   - PowerShell: `$env:XCATCH_RUN_INTEGRATION="1"`
+2. 提供 API Key（必须）
+   - `config.ini` 的 `api_key`，或环境变量 `XCATCH_API_KEY`
+3. 提供测试用户（必须）
+   - `XCATCH_TEST_USER_ID`
+4. 提供测试推文（建议）
+   - 推荐显式设置 `XCATCH_TEST_TWEET_ID`，用于 `GetTweetDetail` / `GetTweetSimple` / `GetTweetsByIDs` / `GetRetweeters` / `GetRetweetersIDs` / `GetFavoriters` / `GetQuotes`
+   - 未设置时，测试会尝试从 `GetUserTweets` / `GetUserTimeline` / `GetUserReplies` 的真实返回中自动提取 tweetId
+5. 鉴权时间线接口（可选）
+   - `GetHomeTimeline` / `GetMentionsTimeline` 需要 `auth_token`（建议同时设置 `ct0`）
+
 ### 运行命令
 
 ```powershell
@@ -142,6 +156,14 @@ go test -tags integration ./pkg/utools -run TestUserIntegration_RealAPI -v
 # 仅测账号分析（需要 auth_token）
 $env:XCATCH_RUN_INTEGRATION="1"
 go test -tags integration ./pkg/utools -run TestUserIntegration_RealAPI/GetAccountAnalytics -v
+
+# 全量 tweet 真实集成测试
+$env:XCATCH_RUN_INTEGRATION="1"
+go test -tags integration ./pkg/utools -run TestTweetIntegration_RealAPI -v
+
+# 仅测 tweet detail（需要 XCATCH_TEST_TWEET_ID）
+$env:XCATCH_RUN_INTEGRATION="1"
+go test -tags integration ./pkg/utools -run "TestTweetIntegration_RealAPI/TweetID required group/GetTweetDetail" -v
 ```
 
 ### 为什么会看到 SKIP
@@ -149,6 +171,7 @@ go test -tags integration ./pkg/utools -run TestUserIntegration_RealAPI/GetAccou
 以下情况会被标记为 `SKIP`（这是设计行为，不是本地代码失败）：
 
 - 缺少前置配置（如 `XCATCH_TEST_USER_ID`、`XCATCH_TEST_SCREEN_NAME`、`auth_token`）
+- 缺少 `XCATCH_TEST_TWEET_ID` 且自动提取 tweetId 失败（仅影响 tweetId 相关子测试）
 - 上游接口返回 `5xx`（例如 500/502）
 
 只有非 `5xx` 的真实调用错误才会导致测试失败。
@@ -257,7 +280,7 @@ func main() {
 | `search <query> [type]` | `Search` | 高级搜索 |
 | `followers <user_id>` | `GetFollowers` | 粉丝列表 |
 | `followings <user_id>` | `GetFollowings` | 关注列表 |
-| `likes <user_id>` | `GetUserLikes` | 点赞列表 |
+| `likes <user_id>` | `GetUserLikes` / `GetUserLikesV2` | 点赞列表 |
 | `trending` | `GetTrending` | 热门趋势 |
 
 ### 常用接口能力
@@ -269,7 +292,7 @@ func main() {
 | 推文详情 | `GetTweetDetail` | 否 | 是 |
 | 搜索 | `Search` | 否 | 是 |
 | 粉丝/关注 | `GetFollowers` / `GetFollowings` | 否 | 是 |
-| 点赞列表 | `GetUserLikes` | 否 | 是 |
+| 点赞列表 | `GetUserLikes` / `GetUserLikesV2` | 否 | 是 |
 | Home 时间线 | `GetHomeTimeline` | 是 | 是 |
 | Mentions 时间线 | `GetMentionsTimeline` | 是 | 是 |
 | 账号分析 | `GetAccountAnalytics` | 是 | 否 |
@@ -302,14 +325,21 @@ func main() {
 | `GetTweetSimple` | `/api/base/apitools/tweetSimple` |
 | `GetTweetsByIDs` | `/api/base/apitools/tweetResultsByRestIds` |
 | `GetUserReplies` | `/api/base/apitools/userTweetReply` |
-| `GetUserLikes` | `/api/base/apitools/userLikeV2` |
+| `GetUserLikes` | `/api/base/apitools/favoritesList` |
+| `GetUserLikesV2` | `/api/base/apitools/userLikeV2` |
 | `GetUserHighlights` | `/api/base/apitools/highlightsV2` |
 | `GetUserArticlesTweets` | `/api/base/apitools/userArticlesTweets` |
 | `GetHomeTimeline` | `/api/base/apitools/homeTimeline` |
 | `GetMentionsTimeline` | `/api/base/apitools/mentionsTimeline` |
 | `GetRetweeters` | `/api/base/apitools/retweetersV2` |
+| `GetRetweetersIDs` | `/api/base/apitools/retweetersIds` |
 | `GetFavoriters` | `/api/base/apitools/favoritersV2` |
 | `GetQuotes` | `/api/base/apitools/quotesV2` |
+
+> Tweet 说明：
+> - `GetUserLikes` 对应官方 Deprecated 路径 `favoritesList`（兼容用途）。
+> - 新接入建议优先使用 `GetUserLikesV2`（`userLikeV2`）。
+> - `GetRetweeters` 是 V2 用户详情列表；`GetRetweetersIDs` 是 Deprecated IDs 列表。
 
 ### Search
 
@@ -355,7 +385,7 @@ func main() {
 
 ### 优先级建议
 
-1. 优先使用带 `V2` 的方法（如 `GetUserByScreenNameV2`、`GetUserTweets`）。
+1. 优先使用带 `V2` 的方法（如 `GetUserByScreenNameV2`、`GetUserTweets`、`GetUserLikesV2`）。
 2. Legacy 方法仅在 V2 不满足需求时使用。
 3. 新增功能默认接入 V2 路径，并在 PR 中记录对应 path。
 
@@ -367,6 +397,8 @@ func main() {
 | 用户查询（ID） | `GetUserByIDV2` | `GetUserByID` |
 | 批量用户查询 | `GetUsersByIDsV2` | `GetUsersByIDs` |
 | 用户推文时间线 | `GetUserTweets` | `GetUserTimeline` |
+| 点赞列表 | `GetUserLikesV2` | `GetUserLikes` |
+| 转推用户列表 | `GetRetweeters` | `GetRetweetersIDs` |
 
 ### 维护建议
 

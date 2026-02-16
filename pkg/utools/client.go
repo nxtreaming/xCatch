@@ -377,6 +377,20 @@ func (c *Client) do(ctx context.Context, method, path string, params map[string]
 			if len(envelope.Data) > 0 && envelope.Data[0] == '"' {
 				var dataStr string
 				if err := json.Unmarshal(envelope.Data, &dataStr); err == nil {
+					if strings.TrimSpace(dataStr) == "" {
+						if err := json.Unmarshal([]byte("null"), result); err != nil {
+							return fmt.Errorf("utools: unmarshal empty inner data as null: %w", err)
+						}
+						return nil
+					}
+					if !json.Valid([]byte(dataStr)) {
+						return &APIError{
+							StatusCode: resp.StatusCode,
+							Code:       envelope.Code,
+							Message:    dataStr,
+							RawBody:    string(body),
+						}
+					}
 					// dataStr is the inner JSON — unmarshal it into result
 					if err := json.Unmarshal([]byte(dataStr), result); err != nil {
 						return fmt.Errorf("utools: unmarshal inner data: %w (data: %s)", err, Truncate(dataStr, 500))
